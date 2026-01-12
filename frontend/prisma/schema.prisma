@@ -1,0 +1,156 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  firstName         String
+  lastName          String
+  phone             String?
+  role              UserRole  @default(STUDENT)
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  pilotBookings     Booking[] @relation("PilotBookings")
+  logbookEntries    LogbookEntry[]
+  
+  @@index([email])
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+// Aircraft model
+model Aircraft {
+  id                String    @id @default(cuid())
+  registration      String    @unique // e.g., ZS-OHH
+  model             String    // e.g., C172 N
+  type              String    // e.g., C172
+  totalHours        Float     @default(0)
+  maintenanceHours  Float     @default(0)
+  nextMaintenance   Float     // Hours until next maintenance
+  status            AircraftStatus @default(AVAILABLE)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  bookings          Booking[] @relation("AircraftBookings")
+  logbookEntries    LogbookEntry[]
+  
+  @@index([registration])
+  @@index([status])
+}
+
+enum AircraftStatus {
+  AVAILABLE
+  MAINTENANCE
+  GROUNDED
+}
+
+// Instructor model
+model Instructor {
+  id                String    @id @default(cuid())
+  firstName         String
+  lastName          String
+  email             String    @unique
+  phone             String?
+  qualifications    String[]  // Array of qualifications
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Relations
+  bookings          Booking[] @relation("InstructorBookings")
+  logbookEntries    LogbookEntry[]
+  
+  @@index([email])
+}
+
+// Booking model
+model Booking {
+  id                String    @id @default(cuid())
+  date              DateTime
+  startTime         String    // e.g., "08:00"
+  duration          Int       // Hours
+  type              BookingType
+  status            BookingStatus @default(CONFIRMED)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Foreign keys
+  pilotId           String
+  aircraftId        String
+  instructorId      String?
+  
+  // Relations
+  pilot             User      @relation("PilotBookings", fields: [pilotId], references: [id], onDelete: Cascade)
+  aircraft          Aircraft  @relation("AircraftBookings", fields: [aircraftId], references: [id], onDelete: Cascade)
+  instructor        Instructor? @relation("InstructorBookings", fields: [instructorId], references: [id], onDelete: SetNull)
+  
+  @@index([date, startTime])
+  @@index([pilotId])
+  @@index([aircraftId])
+  @@index([instructorId])
+  @@unique([aircraftId, date, startTime]) // Prevent double booking aircraft
+}
+
+enum BookingType {
+  TRAINING
+  SOLO
+  PPL_TEST
+  INTRO
+  OTHER
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+// Logbook Entry model
+model LogbookEntry {
+  id                String    @id @default(cuid())
+  date              DateTime
+  departureAirport  String    // e.g., FASH
+  arrivalAirport    String
+  route             String?
+  flightTime        Float     // In hours
+  landings          Int       @default(0)
+  picTime           Float     @default(0) // Pilot in Command time
+  dualTime          Float     @default(0) // Dual instruction time
+  remarks           String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  // Foreign keys
+  pilotId           String
+  aircraftId        String
+  instructorId      String?
+  
+  // Relations
+  pilot             User      @relation(fields: [pilotId], references: [id], onDelete: Cascade)
+  aircraft          Aircraft  @relation(fields: [aircraftId], references: [id], onDelete: Cascade)
+  instructor        Instructor? @relation(fields: [instructorId], references: [id], onDelete: SetNull)
+  
+  @@index([pilotId])
+  @@index([aircraftId])
+  @@index([date])
+}
