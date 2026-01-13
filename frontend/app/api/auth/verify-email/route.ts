@@ -1,20 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verify } from 'jsonwebtoken';
+import { users, pendingVerifications } from '@/lib/auth-storage';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-
-// Import shared storage
-let users: any[] = [];
-let pendingVerifications: Map<string, any>;
-
-// Dynamic import to avoid circular dependency
-try {
-  const registerModule = require('../register/route');
-  users = registerModule.users;
-  pendingVerifications = registerModule.pendingVerifications;
-} catch (e) {
-  console.error('Failed to import user storage:', e);
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get pending user data
-    const userData = pendingVerifications?.get(token);
+    const userData = pendingVerifications.get(token);
 
     if (!userData) {
       return NextResponse.json(

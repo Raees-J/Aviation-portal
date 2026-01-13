@@ -2,13 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sign } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { Resend } from 'resend';
+import { users, pendingVerifications } from '@/lib/auth-storage';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-// In-memory user storage (replace with database in production)
-const users: any[] = [];
-const pendingVerifications = new Map<string, any>();
 
 export async function POST(request: NextRequest) {
   try {
@@ -114,5 +111,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-export { users, pendingVerifications };
