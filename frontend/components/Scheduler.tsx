@@ -84,7 +84,7 @@ const Scheduler = () => {
                     {resources.map(resource => (
                         <div key={resource.id} className="flex border-b border-slate-100 group hover:bg-slate-50 transition-colors">
                             {/* Row Label */}
-                            <div className="w-48 shrink-0 p-3 border-r border-slate-200 flex flex-col justify-center sticky left-0 bg-white group-hover:bg-slate-50 z-10 border-r-4 border-r-transparent group-hover:border-r-aviation-navy">
+                            <div className="w-48 shrink-0 p-3 border-r border-slate-200 flex flex-col justify-center sticky left-0 bg-white group-hover:bg-slate-50 z-10">
                                 <span className="font-bold text-sm text-aviation-navy truncate">{resource.name}</span>
                                 {resource.type === 'aircraft' && (
                                     <span className={`text-[10px] uppercase font-bold tracking-tight ${resource.maintenanceDue && resource.maintenanceDue < 5 ? 'text-amber-600' : 'text-slate-400'}`}>
